@@ -1,13 +1,14 @@
 {
+  "type": "module",
+  "bin": {
+    "server": "./dist/server.js"
+  },
   "name": "mcp-server",
   "version": "1.0.0",
   "description": "MCP Server para mejora de contexto",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node src/server.ts",
-    "start": "node dist/server.js",
-    "watch": "nodemon --exec ts-node src/server.ts"
+    "build": "tsc"
   },
   "keywords": ["mcp", "model-context-protocol", "ai"],
   "author": "",

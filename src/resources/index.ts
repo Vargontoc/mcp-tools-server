@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import config from "../config";
+import { geocodingCache, weatherCache } from "../utils/cache";
 
 export function registerResources(server: McpServer) {
     // Resource de información del servidor
@@ -28,6 +29,10 @@ export function registerResources(server: McpServer) {
                     configuration: {
                         apis: apiUrls,
                         weather: weatherSettings
+                    },
+                    cache: {
+                        geocoding: geocodingCache.getStats(),
+                        weather: weatherCache.getStats()
                     }
                 };
 

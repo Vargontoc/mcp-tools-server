@@ -3,6 +3,7 @@ import config from '../config';
 import { WeatherResponse, WeatherResponseSchema } from '../types';
 import { GeolocationResult } from './geocoding';
 import { rateLimiter, RATE_LIMITS } from '../utils/rate-limiter';
+import { weatherCache } from '../utils/cache';
 
 export interface WeatherData {
     location: GeolocationResult;
@@ -41,6 +42,15 @@ export class WeatherService {
 
     async getWeatherData(location: GeolocationResult): Promise<WeatherData> {
         this.logger.debug('Starting weather request', { location });
+
+        // Create cache key based on location and forecast days
+        const cacheKey = `weather:${location.latitude.toFixed(4)},${location.longitude.toFixed(4)}:${this.forecastDays}`;
+        const cachedResult = weatherCache.get(cacheKey);
+
+        if (cachedResult) {
+            this.logger.debug('Weather cache hit', { location: location.name });
+            return cachedResult;
+        }
 
         // Check rate limit
         const rateLimitKey = `weather:${this.apiUrl}`;
@@ -95,7 +105,10 @@ export class WeatherService {
             const data = validation.data;
             const weatherData = this.transformWeatherData(location, data);
 
-            this.logger.info('Weather request successful', {
+            // Cache the result
+            weatherCache.set(cacheKey, weatherData);
+
+            this.logger.info('Weather request successful and cached', {
                 location: location.name,
                 temperature: weatherData.current?.temperature,
                 hasHourlyData: !!weatherData.hourly

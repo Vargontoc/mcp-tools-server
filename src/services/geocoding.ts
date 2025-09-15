@@ -2,6 +2,7 @@ import { logger } from '../utils/logger';
 import config from '../config';
 import { GeocodingResponseSchema } from '../types';
 import { rateLimiter, RATE_LIMITS } from '../utils/rate-limiter';
+import { geocodingCache } from '../utils/cache';
 
 export interface GeolocationResult {
     latitude: number;
@@ -25,6 +26,15 @@ export class GeocodingService {
 
     async getCoordinates(city: string): Promise<GeolocationResult | null> {
         this.logger.debug('Starting geocoding request', { city });
+
+        // Check cache first
+        const cacheKey = `geocoding:${city.toLowerCase().trim()}`;
+        const cachedResult = geocodingCache.get(cacheKey);
+
+        if (cachedResult) {
+            this.logger.debug('Geocoding cache hit', { city });
+            return cachedResult;
+        }
 
         // Check rate limit
         const rateLimitKey = `geocoding:${this.apiUrl}`;
@@ -79,6 +89,8 @@ export class GeocodingService {
 
             if (!data.results || data.results.length === 0) {
                 this.logger.warn('No geocoding results found', { city });
+                // Cache negative result for shorter time
+                geocodingCache.set(cacheKey, null, 30 * 60 * 1000); // 30 minutes
                 return null;
             }
 
@@ -90,7 +102,10 @@ export class GeocodingService {
                 country: result.country || 'Unknown'
             };
 
-            this.logger.info('Geocoding successful', {
+            // Cache successful result
+            geocodingCache.set(cacheKey, coordinates);
+
+            this.logger.info('Geocoding successful and cached', {
                 city,
                 result: coordinates
             });

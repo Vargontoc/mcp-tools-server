@@ -1,24 +1,23 @@
 import { McpServer} from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { z } from "zod";
-import { AlertFeature } from "./types";
 import { registerTools } from "./tools";
-
-const NWS_API_BASE = "https://api.weather.gov";
-const USER_AGENT = "weather-app/1.0";
+import { registerResources } from "./resources";
 
 const server = new McpServer({
     name: "MPC Server Custom",
     version: "1.0.0",
     capabilities: {
-        resources: {},
+        resources: {
+            "suscribe": true,
+            "listChanged": true
+        },
         tools: {}
     }
 })
 
 // Register tools
 registerTools(server)
-
+registerResources(server)
 
 async function main() {
     const transport = new StdioServerTransport()

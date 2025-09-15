@@ -2,6 +2,7 @@ import { logger } from '../utils/logger';
 import config from '../config';
 import { WeatherResponse, WeatherResponseSchema } from '../types';
 import { GeolocationResult } from './geocoding';
+import { rateLimiter, RATE_LIMITS } from '../utils/rate-limiter';
 
 export interface WeatherData {
     location: GeolocationResult;
@@ -40,6 +41,14 @@ export class WeatherService {
 
     async getWeatherData(location: GeolocationResult): Promise<WeatherData> {
         this.logger.debug('Starting weather request', { location });
+
+        // Check rate limit
+        const rateLimitKey = `weather:${this.apiUrl}`;
+        const rateLimitResult = rateLimiter.checkLimit(rateLimitKey, RATE_LIMITS.WEATHER_API);
+
+        if (!rateLimitResult.allowed) {
+            throw new Error(`Rate limit exceeded for weather API. Try again in ${rateLimitResult.retryAfter}s`);
+        }
 
         try {
             const controller = new AbortController();

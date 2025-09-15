@@ -1,6 +1,7 @@
 import { logger } from '../utils/logger';
 import config from '../config';
 import { GeocodingResponseSchema } from '../types';
+import { rateLimiter, RATE_LIMITS } from '../utils/rate-limiter';
 
 export interface GeolocationResult {
     latitude: number;
@@ -24,6 +25,14 @@ export class GeocodingService {
 
     async getCoordinates(city: string): Promise<GeolocationResult | null> {
         this.logger.debug('Starting geocoding request', { city });
+
+        // Check rate limit
+        const rateLimitKey = `geocoding:${this.apiUrl}`;
+        const rateLimitResult = rateLimiter.checkLimit(rateLimitKey, RATE_LIMITS.GEOCODING_API);
+
+        if (!rateLimitResult.allowed) {
+            throw new Error(`Rate limit exceeded for geocoding API. Try again in ${rateLimitResult.retryAfter}s`);
+        }
 
         try {
             const controller = new AbortController();

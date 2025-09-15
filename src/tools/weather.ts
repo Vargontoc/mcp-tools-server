@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { z } from "zod";
 import { logger } from "../utils/logger";
 import { geocodingService, weatherService, WeatherService } from "../services";
+import { rateLimiter, RATE_LIMITS } from "../utils/rate-limiter";
 
 export function getWeatherTool(server: McpServer) 
 {
@@ -30,6 +31,23 @@ export function getWeatherTool(server: McpServer)
 
                 const cityName = city.trim();
                 weatherLogger.info('Processing weather request', { cityName });
+
+                // Check tool usage rate limit
+                const toolRateLimitKey = `tool:weather`;
+                const toolRateLimitResult = rateLimiter.checkLimit(toolRateLimitKey, RATE_LIMITS.TOOL_USAGE);
+
+                if (!toolRateLimitResult.allowed) {
+                    weatherLogger.warn('Tool rate limit exceeded', {
+                        city: cityName,
+                        retryAfter: toolRateLimitResult.retryAfter
+                    });
+                    return {
+                        content: [{
+                            type: "text",
+                            text: `⏰ Límite de consultas alcanzado. Puedes hacer otra consulta en ${toolRateLimitResult.retryAfter} segundos.`
+                        }]
+                    };
+                }
 
                 // Step 1: Get coordinates for city
                 const coordinates = await geocodingService.getCoordinates(cityName);
@@ -74,6 +92,8 @@ export function getWeatherTool(server: McpServer)
                     userMessage = `Timeout: La solicitud para "${city}" tardó demasiado tiempo. Inténtalo nuevamente.`;
                 } else if (errorMessage.includes('HTTP')) {
                     userMessage = `Error de conexión al obtener el clima para "${city}". Verifica tu conexión a internet.`;
+                } else if (errorMessage.includes('Rate limit exceeded')) {
+                    userMessage = `⏰ Demasiadas solicitudes. ${errorMessage}`;
                 }
 
                 return {

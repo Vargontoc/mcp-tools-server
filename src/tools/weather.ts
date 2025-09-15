@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { z } from "zod";
 import { logger } from "../utils/logger";
-import { geocodingService, weatherService, WeatherService } from "../services";
 import { rateLimiter, RATE_LIMITS } from "../utils/rate-limiter";
+import { lazyLoader, measurePerformance } from "../utils/performance";
 
 export function getWeatherTool(server: McpServer) 
 {
@@ -48,6 +48,12 @@ export function getWeatherTool(server: McpServer)
                         }]
                     };
                 }
+
+                // Lazy load services when needed
+                const { geocodingService, weatherService, WeatherService } = await lazyLoader.load(
+                    'weather-services',
+                    () => import('../services')
+                );
 
                 // Step 1: Get coordinates for city
                 const coordinates = await geocodingService.getCoordinates(cityName);

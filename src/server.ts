@@ -5,6 +5,7 @@ import { registerTools } from "./tools";
 import { registerResources } from "./resources";
 import { logger } from "./utils/logger";
 import config from "./config";
+import { performanceMonitor, lazyLoader } from "./utils/performance";
 
 // Get server configuration
 const serverSettings = config.getServerSettings();
@@ -55,6 +56,7 @@ async function main() {
             name: serverSettings.name,
             version: serverSettings.version,
             pid: process.pid,
+            performance: performanceMonitor.getStats(),
             config: {
                 logLevel: serverSettings.logLevel,
                 connectionTimeout: serverSettings.connectionTimeout,
@@ -62,6 +64,25 @@ async function main() {
                 ...config.getWeatherSettings()
             }
         })
+
+        // Start periodic performance monitoring
+        setInterval(() => {
+            const stats = performanceMonitor.getStats();
+            const metrics = performanceMonitor.getMetrics();
+
+            if (metrics.memoryUsage.heapUsed / 1024 / 1024 > 50) { // > 50MB
+                logger.warn('High memory usage detected', {
+                    heapUsed: `${(metrics.memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+                    requests: stats.requests.total,
+                    avgResponseTime: `${stats.requests.averageResponseTime.toFixed(2)}ms`
+                });
+            }
+
+            // Force GC if memory is high (requires --expose-gc flag)
+            if (metrics.memoryUsage.heapUsed / 1024 / 1024 > 100) {
+                performanceMonitor.forceGC();
+            }
+        }, 60000); // Every minute
 
         // Graceful shutdown handlers
         process.on('SIGTERM', () => {

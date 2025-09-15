@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import config from "../config";
 import { geocodingCache, weatherCache } from "../utils/cache";
+import { performanceMonitor, lazyLoader } from "../utils/performance";
+import { rateLimiter } from "../utils/rate-limiter";
 
 export function registerResources(server: McpServer) {
     // Resource de información del servidor
@@ -33,7 +35,13 @@ export function registerResources(server: McpServer) {
                     cache: {
                         geocoding: geocodingCache.getStats(),
                         weather: weatherCache.getStats()
-                    }
+                    },
+                    performance: {
+                        ...performanceMonitor.getStats(),
+                        metrics: performanceMonitor.getMetrics()
+                    },
+                    rateLimiter: rateLimiter.getStats(),
+                    lazyLoader: lazyLoader.getStats()
                 };
 
                 return {

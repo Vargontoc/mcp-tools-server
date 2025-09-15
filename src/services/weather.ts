@@ -68,7 +68,7 @@ export class WeatherService {
 
             const rawData = await response.json();
             this.logger.debug('Raw weather response received', {
-                dataKeys: Object.keys(rawData),
+                dataKeys: rawData && typeof rawData === 'object' ? Object.keys(rawData) : 'invalid_data',
                 location: location.name
             });
 

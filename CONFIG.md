@@ -37,12 +37,17 @@ Este documento describe cómo configurar el servidor MCP usando variables de ent
 
 ## Configuración
 
-1. **Copiar archivo de ejemplo:**
+1. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
+
+2. **Copiar archivo de ejemplo:**
    ```bash
    cp .env.example .env
    ```
 
-2. **Editar las variables según necesites:**
+3. **Editar las variables según necesites:**
    ```bash
    # Ejemplo de configuración personalizada
    MCP_SERVER_NAME="Mi Servidor MCP"
@@ -51,7 +56,12 @@ Este documento describe cómo configurar el servidor MCP usando variables de ent
    REQUEST_TIMEOUT_MS="15000"
    ```
 
-3. **Variables opcionales:**
+4. **El servidor cargará automáticamente el archivo .env:**
+   - ✅ Se ejecuta `import 'dotenv/config'` al inicio
+   - ✅ Variables disponibles en `process.env`
+   - ✅ Fallback a valores por defecto si no existen
+
+5. **Variables opcionales:**
    - Si no se especifican, se usan los valores por defecto
    - Las URLs de APIs solo necesitan cambiarse para testing o APIs alternativas
 

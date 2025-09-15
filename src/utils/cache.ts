@@ -160,7 +160,7 @@ export class Cache<T = any> {
      */
     private evictOldest(): void {
         let oldestKey = '';
-        let oldestTimestamp = Date.now();
+        let oldestTimestamp = Infinity;
 
         for (const [key, entry] of this.storage.entries()) {
             if (entry.timestamp < oldestTimestamp) {
@@ -208,9 +208,8 @@ export class Cache<T = any> {
     }
 
     // Override get to track stats
-    private originalGet = this.get;
-    get(key: string): T | null {
-        const result = this.originalGet.call(this, key);
+    getWithStats(key: string): T | null {
+        const result = this.get(key);
 
         if (result !== null) {
             this.hits++;

@@ -18,6 +18,7 @@ export class PerformanceMonitor {
     private responseTimeSum = 0;
     private cpuStart = process.cpuUsage();
     private memoryPeak = 0;
+    private memoryCheckTimer: NodeJS.Timeout | null = null;
 
     constructor() {
         this.setupMemoryMonitoring();
@@ -102,6 +103,17 @@ export class PerformanceMonitor {
     }
 
     /**
+     * Clean up resources and timers
+     */
+    cleanup(): void {
+        if (this.memoryCheckTimer) {
+            clearInterval(this.memoryCheckTimer);
+            this.memoryCheckTimer = null;
+            this.logger.info('Performance monitoring cleanup completed');
+        }
+    }
+
+    /**
      * Force garbage collection if available
      */
     forceGC(): boolean {
@@ -155,8 +167,8 @@ export class PerformanceMonitor {
             }
         };
 
-        // Check memory every 30 seconds
-        setInterval(checkMemory, 30000);
+        // Check memory every 30 seconds (store timer for cleanup)
+        this.memoryCheckTimer = setInterval(checkMemory, 30000);
     }
 }
 
@@ -202,7 +214,8 @@ export class LazyLoader {
 
         const promises = modules.map(({ name, importFn }) =>
             this.load(name, importFn).catch(error => {
-                this.logger.warn('Failed to preload module', error, { module: name });
+                const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+                this.logger.warn('Failed to preload module', { error: errorMessage, module: name });
                 return null;
             })
         );

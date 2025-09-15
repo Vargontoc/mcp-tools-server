@@ -20,8 +20,8 @@ describe('ConfigManager', () => {
     delete process.env.GEOCODING_API_URL;
 
     // Import fresh config
-    delete require.cache[require.resolve('./index.js')];
-    const { ConfigManager } = require('./index.js');
+    delete require.cache[require.resolve('./index')];
+    const { ConfigManager } = require('./index');
     const config = new ConfigManager();
 
     const settings = config.getServerSettings();
@@ -34,8 +34,8 @@ describe('ConfigManager', () => {
     process.env.LOG_LEVEL = 'DEBUG';
     process.env.WEATHER_LANGUAGE = 'en';
 
-    delete require.cache[require.resolve('./index.js')];
-    const { ConfigManager } = require('./index.js');
+    delete require.cache[require.resolve('./index')];
+    const { ConfigManager } = require('./index');
     const config = new ConfigManager();
 
     const settings = config.getServerSettings();
@@ -49,8 +49,8 @@ describe('ConfigManager', () => {
   it('should validate and correct invalid log level', () => {
     process.env.LOG_LEVEL = 'INVALID';
 
-    delete require.cache[require.resolve('./index.js')];
-    const { ConfigManager } = require('./index.js');
+    delete require.cache[require.resolve('./index')];
+    const { ConfigManager } = require('./index');
     const config = new ConfigManager();
 
     const settings = config.getServerSettings();

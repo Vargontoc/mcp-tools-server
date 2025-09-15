@@ -47,7 +47,7 @@ export const WeatherResponseSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   generationtime_ms: z.number(),
-  utc_offset_seconds: z.number(),
+  utc_offset_seconds: z.number().optional(),
   timezone: z.string(),
   timezone_abbreviation: z.string(),
   elevation: z.number(),

@@ -6,6 +6,7 @@ import { registerResources } from "./resources";
 import { logger } from "./utils/logger";
 import config from "./config";
 import { performanceMonitor, lazyLoader } from "./utils/performance";
+import { healthMonitor } from "./utils/health";
 
 // Get server configuration
 const serverSettings = config.getServerSettings();
@@ -65,6 +66,19 @@ async function main() {
             }
         })
 
+        // Initial health check
+        try {
+            const initialHealth = await healthMonitor.getHealthStatus();
+            logger.info("Initial health check completed", {
+                status: initialHealth.status,
+                checks: initialHealth.checks.length,
+                failedChecks: initialHealth.checks.filter(c => c.status === 'fail').length
+            });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+            logger.warn("Initial health check failed", { error: errorMessage });
+        }
+
         // Start periodic performance monitoring
         setInterval(() => {
             const stats = performanceMonitor.getStats();
@@ -87,12 +101,26 @@ async function main() {
         // Graceful shutdown handlers
         process.on('SIGTERM', () => {
             logger.info("SIGTERM received, shutting down gracefully")
-            process.exit(0)
+            // Log final health status
+            healthMonitor.getQuickHealth().then(health => {
+                logger.info("Final health status", health);
+            }).catch(() => {
+                logger.warn("Could not get final health status");
+            }).finally(() => {
+                process.exit(0);
+            });
         })
 
         process.on('SIGINT', () => {
             logger.info("SIGINT received, shutting down gracefully")
-            process.exit(0)
+            // Log final health status
+            healthMonitor.getQuickHealth().then(health => {
+                logger.info("Final health status", health);
+            }).catch(() => {
+                logger.warn("Could not get final health status");
+            }).finally(() => {
+                process.exit(0);
+            });
         })
 
     } catch (error) {

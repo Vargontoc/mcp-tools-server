@@ -129,10 +129,23 @@ class RateLimiter {
 
 export const rateLimiter = new RateLimiter();
 
-// Automatic cleanup every 5 minutes
-setInterval(() => {
-    rateLimiter.cleanup();
-}, 5 * 60 * 1000);
+// Initialize cleanup on first use
+let cleanupTimer: NodeJS.Timeout | null = null;
+
+function ensureCleanup() {
+    if (!cleanupTimer) {
+        cleanupTimer = setInterval(() => {
+            rateLimiter.cleanup();
+        }, 5 * 60 * 1000);
+    }
+}
+
+// Start cleanup when first method is called
+const originalCheckLimit = rateLimiter.checkLimit.bind(rateLimiter);
+rateLimiter.checkLimit = function(...args: Parameters<typeof originalCheckLimit>) {
+    ensureCleanup();
+    return originalCheckLimit(...args);
+};
 
 // Default configurations for different services
 export const RATE_LIMITS = {

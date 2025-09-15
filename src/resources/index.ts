@@ -3,6 +3,7 @@ import config from "../config";
 import { geocodingCache, weatherCache } from "../utils/cache";
 import { performanceMonitor, lazyLoader } from "../utils/performance";
 import { rateLimiter } from "../utils/rate-limiter";
+import { healthMonitor } from "../utils/health";
 
 export function registerResources(server: McpServer) {
     // Resource de información del servidor
@@ -114,6 +115,90 @@ export function registerResources(server: McpServer) {
                             mimeType: "application/json",
                             text: JSON.stringify({
                                 error: "Error al obtener lista de ciudades",
+                                message: errorMessage,
+                                timestamp: new Date().toISOString()
+                            }, null, 2)
+                        }
+                    ]
+                };
+            }
+        }
+    );
+
+    // Resource de health check
+    server.resource(
+        "health-status",
+        "health://status",
+        {
+            name: "Health Status",
+            description: "Estado de salud del servidor y sus componentes",
+            mimeType: "application/json"
+        },
+        async () => {
+            try {
+                const healthStatus = await healthMonitor.getHealthStatus();
+
+                return {
+                    contents: [
+                        {
+                            uri: "health://status",
+                            mimeType: "application/json",
+                            text: JSON.stringify(healthStatus, null, 2)
+                        }
+                    ]
+                };
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+                return {
+                    contents: [
+                        {
+                            uri: "health://status",
+                            mimeType: "application/json",
+                            text: JSON.stringify({
+                                status: "unhealthy",
+                                error: "Error al obtener estado de salud",
+                                message: errorMessage,
+                                timestamp: new Date().toISOString()
+                            }, null, 2)
+                        }
+                    ]
+                };
+            }
+        }
+    );
+
+    // Resource de quick health check
+    server.resource(
+        "health-quick",
+        "health://quick",
+        {
+            name: "Quick Health Check",
+            description: "Chequeo rápido del estado del servidor",
+            mimeType: "application/json"
+        },
+        async () => {
+            try {
+                const quickHealth = await healthMonitor.getQuickHealth();
+
+                return {
+                    contents: [
+                        {
+                            uri: "health://quick",
+                            mimeType: "application/json",
+                            text: JSON.stringify(quickHealth, null, 2)
+                        }
+                    ]
+                };
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+                return {
+                    contents: [
+                        {
+                            uri: "health://quick",
+                            mimeType: "application/json",
+                            text: JSON.stringify({
+                                status: "error",
+                                error: "Error en quick health check",
                                 message: errorMessage,
                                 timestamp: new Date().toISOString()
                             }, null, 2)

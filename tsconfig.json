@@ -1,12 +1,13 @@
 {
     "compilerOptions": {
         "target": "es2024",
-        "module": "commonjs",
+        "module": "ES2022",
         "outDir": "./dist",
         "rootDir": "./src",
         "lib": ["ES2024"],
         "strict": true,
         "esModuleInterop": true,
+        "moduleResolution": "node",
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
     },

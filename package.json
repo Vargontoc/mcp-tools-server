@@ -8,7 +8,11 @@
   "description": "MCP Server para mejora de contexto",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "start": "node dist/server.js",
+    "lint": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "mcp",
@@ -19,8 +23,9 @@
   "license": "ISC",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",
-  "pg": "^8.16.3",
-  "js-yaml": "^4.1.0"
+    "pg": "^8.16.3",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^24.3.3",

@@ -1,9 +1,0 @@
-{
-    "mcpServers": {
-        "mcp-tools" : {
-            "command": "node",
-            "args" : ["dist/server.js"],
-            "env": {}
-        }
-    }
-}
